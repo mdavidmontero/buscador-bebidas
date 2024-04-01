@@ -6,17 +6,30 @@ import {
 } from "../services/RecipeService";
 import type { Categories, Drinks, Recipe, SearchFilter } from "../types";
 import { Drink } from "../types/index";
+import { FavoriteSliceType } from "./favoriteSlice";
+import {
+  createNotificationSlice,
+  NotificationSliceType,
+} from "./notificationSlice";
 
 export type recipesSliceType = {
   categories: Categories;
   drinks: Drinks;
   selectedRecipe: Recipe;
+  modal: boolean;
   fetchCategories: () => Promise<void>;
   searchRecipes: (searchFilter: SearchFilter) => Promise<void>;
   selectRecipe: (id: Drink["idDrink"]) => Promise<void>;
+  closeModal: () => void;
+  showNotificationRecipe: () => void;
 };
 
-export const createRecipesSlice: StateCreator<recipesSliceType> = (set) => ({
+export const createRecipesSlice: StateCreator<
+  recipesSliceType & FavoriteSliceType & NotificationSliceType,
+  [],
+  [],
+  recipesSliceType
+> = (set, get, api) => ({
   categories: {
     drinks: [],
   },
@@ -24,6 +37,7 @@ export const createRecipesSlice: StateCreator<recipesSliceType> = (set) => ({
     drinks: [],
   },
   selectedRecipe: {} as Recipe,
+  modal: false,
   fetchCategories: async () => {
     const categories = await getCategories();
     set(() => ({
@@ -38,8 +52,21 @@ export const createRecipesSlice: StateCreator<recipesSliceType> = (set) => ({
   },
   selectRecipe: async (id) => {
     const selectedRecipe = await getRecipeById(id);
-    set(() => ({
+    set({
       selectedRecipe,
-    }));
+      modal: true,
+    });
+  },
+  closeModal: () => {
+    set({
+      modal: false,
+      selectedRecipe: {} as Recipe,
+    });
+  },
+  showNotificationRecipe: () => {
+    createNotificationSlice(set, get, api).showNotification({
+      text: "Todos los campos son Obligatorios",
+      error: true,
+    });
   },
 });
